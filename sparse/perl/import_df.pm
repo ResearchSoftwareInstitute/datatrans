@@ -178,24 +178,28 @@ sub skip_entry_sep {
 }
 =head 2 parse_array
 
-Parse an '/n'-terminated line, (possibly packaged by "{}"), delimited by ',', into an array of tokens.
+Parse an '/n'-terminated line.
 
-Tokens may or may not be double-quoted (e.g., by ")
+BNF grammar for endotype.csv file (not considering meta-data):
 
-Line grammar:
+<line>               ::= <entry>"\n" | <entry><entry_sep><line>
+<entry_sep>          ::= "!"
+<entry>              ::= <element> | (<index-element-list>) | ""
+<index-element-list> ::= <index-container>,<element-container>
+<element-container>  ::= '{'<element-list>'}' | '"'{<element-list>}'"' |  '"'{'"'<element-list>'"'}'"'
+<index-container>    ::= '{'<index-list>} | '"'{<index-list>}'"' |  '"'{'"'<index-list>'"'}'"'
+<element-list>       ::= <string> | <string>","<element-list>
+<index-list>         ::= <integer> | <integer>","<index-list>
 
-line = <entry>\n | <entry><entry_sep><line>
-<entry_sep> = ! | <empty>
-<entry>= <token> | (<token-list>)
-<token-list> = <index-element-list> | ...xxx ???
-<index-element-list>=("{<index-list>}","{<element-list}")
-<index-list>=<int>,<int> | <index-list>,<int>
-<element-list>= <token-container>,<token-container> | <element-list>,<token-container>
-<token-container>={<quoted-token>} | "{"<quoted-token>"}" | "{<qupted-token>}"
-<quoted-token>="<token>"|<token>|\<token>\
-<token>= [0-9A-z"./-:]* | <empty>
-<empty>= empty, 0-length string
-<int>=[0-9]*
+<integer>            ::=<digit>|<digit><integer>
+<string>             ::=""|<character><string>
+<character>          ::= <letter> | <digit> | <symbol>
+<letter>             ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" |\
+ "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" |\
+ "w" | "x" | "y" | "z"
+<digit>              ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+<symbol>             ::=  "|" | " " | "-" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | ">" | "=" | "<" | "?" \
+| "@" | "[" | "\" | "]" | "^" | "_" | "`" | "{" | "}" | "~" | "'" | '"'
 
 =over
 
@@ -208,12 +212,7 @@ Reference to an array of quoted-strings(e.g., " or \), parsed-out of the "<line>
 
 =buf
 
-A single '\n'-terminated line to parse, examples:
-
-"35942480!45884365!!!!({16},{t})!({16},"{""2014-11-24 00:00:00""}")!({},{})!!!!!!!!!!!!!!!!!!!!!!!1981-10-07 00:00:00!M!2!44.28469!-73.49636\n"
-
-"26205990!45910145!!!!({10},{t})!({10},"{""2015-04-14 00:00:00""}")!({},{})!!!!!!!!("{195,203,205,207,209,211,213}","{"""",N,T,T,N,N,T}")!("{203,209,211}","{1.00000,365.00000,11.00000}")!("{195,203,205,207,209,211,213}","{"""",E,""DAILY (STANDARD)"",OUTPATIENT,E,E,NASAL}")!("{195,203,205,207,209,211,213}","{"""",SPRAY,"""","""","""","""",""""}")!("{195,203,205,207,209,211,213}","{""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00""}")!("{195,203,205,207,209,211,213}","{""2016-07-06 00:00:00"",""2016-07-06 00:00:00"",""2016-07-06 00:00:00"",""2016-07-06 00:00:00"",""2016-07-06 00:00:00"",""2016-07-06 00:00:00"",""2016-07-06 00:00:00""}")!("{195,203,205,207,209,211,213}","{"""","""","""","""","""","""",""""}")!("{6,48}","{t,t}")!("{1,8,131,254,260,268,892,969}","{N,N,N,N,N,N,N,N}")!("{1,8,131,254,260,268,892,969}","{56.40000,76.00000,129.00000,2.65000,65.00000,66.00000,98.60000,339.00000}")!("{1,8,131,254,260,268,892,969}","{E,E,E,E,E,E,E,E}")!("{1,8,131,254,260,268,892,969}","{kg/m2,mmHg,mmHg,m2,in,BPM,F,lbs}")!("{1,8,131,254,260,268,892,969}","{""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00"",""2015-04-14 00:00:00""}")!({},{})!("{1,8,131,254,260,268,892,969}","{"""","""","""","""","""","""","""",""""}")!1951-11-26 00:00:00!F!1!35.33340!-78.39535\n"
-
+A single '\n'-terminated line to parse.
 
 =cut
 sub parse_array {
